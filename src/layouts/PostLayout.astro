@@ -1,0 +1,339 @@
+---
+import Header from '../components/Header.astro';
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from './BaseLayout.astro';
+import JsonLD from '../components/JsonLD.astro';
+import { site } from '../config/site';
+import { BlogPostSchema } from '../config/schema';
+import getModifiedTime from '../util/getModifiedTime';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  next: CollectionEntry<'blog'>;
+}
+
+const { post, next } = Astro.props;
+
+const formatDate = (d: Date) =>
+  d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+// Page Meta
+const title = `${post.data.title} | ${site.name}`;
+const canonicalUrl = new URL(Astro.url.pathname, site.url);
+
+const { lastModified } = getModifiedTime(post.filePath!);
+const datePublished = post.data.pubDate.toISOString();
+const dateUpdated = new Date(lastModified).toISOString();
+const hasUpdatedDate = dateUpdated !== datePublished;
+
+const pageSchema = await BlogPostSchema(
+  canonicalUrl.toString(),
+  post,
+  lastModified,
+);
+---
+
+<BaseLayout title={title} description={post.data.description ?? title}>
+  <Fragment slot='head'>
+    <meta name='keywords' content={post.data.tags.join(', ')} />
+    <meta property='og:type' content='article' />
+    <meta property='article:published_time' content={datePublished} />
+    <meta property='article:modified_time' content={dateUpdated} />
+    <meta property='article:tag' content={post.data.tags.join(', ')} />
+    {
+      post.data.image && (
+        <>
+          <meta
+            property='og:image'
+            content={site.url + post.data.image.src.src}
+          />
+          <meta property='og:image:alt' content={post.data.image.alt} />
+        </>
+      )
+    }
+    <JsonLD graph={pageSchema} />
+  </Fragment>
+
+  <Header />
+
+  <main class='post-main'>
+    <article>
+      <header class='post-header'>
+        <Image
+          class='featured-image'
+          src={post.data.image.src}
+          alt={post.data.image.alt}
+          loading={'eager'}
+        />
+
+        {post.data.draft && <span class='draft-badge'>Draft</span>}
+
+        <h1>{post.data.title}</h1>
+
+        <hr />
+
+        <div class='post-meta'>
+          <div class='meta-group'>
+            <strong>Published</strong>
+            <time datetime={datePublished}>{formatDate(post.data.pubDate)}</time
+            >
+          </div>
+
+          {
+            hasUpdatedDate && (
+              <div class='meta-group'>
+                <strong>Updated</strong>
+                <time datetime={dateUpdated}>
+                  {formatDate(new Date(dateUpdated))}
+                </time>
+              </div>
+            )
+          }
+
+          <div class='meta-group'>
+            <strong>Tags</strong>
+            <ul class='tag-list'>
+              {post.data.tags.map((tag) => <li>{tag}</li>)}
+            </ul>
+          </div>
+
+          {
+            post.data.description && (
+              <div class='meta-group'>
+                <strong>Summary</strong>
+                <p>{post.data.description}</p>
+              </div>
+            )
+          }
+        </div>
+      </header>
+
+      <section class='prose'>
+        <slot />
+      </section>
+
+      <footer class='post-footer'>
+        {post.data.draft && <span class='draft-badge'>Draft</span>}
+        <span class='post-title'>{post.data.title}</span>
+        <a href={`/blog/${next.id}`} class='button-link'>Next Post</a>
+      </footer>
+    </article>
+  </main>
+
+  <footer class='site-footer'>
+    <small>&copy; {new Date().getFullYear()} {site.name}</small>
+  </footer>
+</BaseLayout>
+
+<style>
+  @reference '../styles/global.css';
+
+  :root {
+    scroll-behavior: smooth;
+    scroll-padding: 5rem;
+  }
+
+  .post-main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .post-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .featured-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: contain;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+  }
+
+  .draft-badge {
+    color: red;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-primary, #333);
+  }
+
+  .post-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .meta-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .meta-group a {
+    color: #20577e;
+    text-decoration: underline;
+  }
+
+  .tag-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .post-footer {
+    border-top: 1px solid var(--color-primary, #333);
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .post-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .prose {
+    color: var(--color-primary, #333);
+    line-height: 1.8;
+    font-size: 1.125rem;
+
+    :global(ul),
+    :global(ol),
+    :global(p) {
+      margin-bottom: 0.75rem;
+    }
+
+    :global(ul) {
+      list-style: disc;
+      padding-left: 2rem;
+    }
+
+    :global(ol) {
+      list-style: decimal;
+      padding-left: 2rem;
+    }
+
+    :global(a) {
+      text-decoration: underline;
+    }
+
+    :global(h1),
+    :global(h2),
+    :global(h3),
+    :global(h4),
+    :global(h5),
+    :global(h6) {
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+    }
+
+    :global(h1) {
+      font-size: 2.25rem;
+      border-bottom: 1px solid var(--color-primary, #333);
+      padding-bottom: 0.5rem;
+    }
+
+    :global(h2) {
+      font-size: 1.75rem;
+      border-bottom: 1px solid var(--color-primary, #333);
+      padding-bottom: 0.5rem;
+    }
+
+    :global(h3) {
+      font-size: 1.5rem;
+    }
+
+    :global(h4) {
+      font-size: 1.25rem;
+    }
+
+    :global(img),
+    :global(video) {
+      width: 100%;
+      margin: 1.5rem 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-height: 800px;
+      object-fit: contain;
+    }
+
+    :global(table) {
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      display: block;
+      overflow-x: auto;
+    }
+
+    :global(th) {
+      padding: 0.75rem 1rem;
+      text-align: start;
+      border-right: 1px solid rgba(0, 0, 0, 0.15);
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    :global(tr) {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    }
+
+    :global(td) {
+      padding: 0.75rem 1rem;
+      border-right: 1px solid rgba(0, 0, 0, 0.15);
+    }
+
+    :global(hr) {
+      border: none;
+      border-top: 1px solid var(--color-primary, #333);
+    }
+
+    :global(code) {
+      background: rgba(0, 0, 0, 0.06);
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    :global(pre) {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    :global(pre code) {
+      background: none;
+      padding: 0;
+    }
+
+    :global(blockquote) {
+      border-left: 3px solid var(--color-primary, #333);
+      padding-left: 1rem;
+      margin: 1rem 0;
+      opacity: 0.8;
+      font-style: italic;
+    }
+  }
+</style>

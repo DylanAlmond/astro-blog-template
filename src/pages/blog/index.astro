@@ -1,0 +1,173 @@
+---
+import { getCollection } from 'astro:content';
+import PageLayout from '../../layouts/PageLayout.astro';
+import { Image } from 'astro:assets';
+import JsonLD from '../../components/JsonLD.astro';
+import { site } from '../../config/site';
+import { BlogSchema } from '../../config/schema';
+
+const posts = (
+  await getCollection('blog', ({ data }) =>
+    import.meta.env.PROD ? data.draft !== true : true,
+  )
+).sort((a, b) => {
+  if (a.data.pinned && !b.data.pinned) return -1;
+  if (!a.data.pinned && b.data.pinned) return 1;
+  return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+});
+
+// Page Meta
+const title = `Blog | ${site.name}`;
+const description = 'Browse recent blog posts, notes, and updates.';
+const canonicalUrl = new URL(Astro.url.pathname, site.url);
+const pageSchema = await BlogSchema(
+  canonicalUrl.toString(),
+  posts,
+  title,
+  description,
+);
+---
+
+<PageLayout title={title} description={description} class='page-stack'>
+  <Fragment slot='head'>
+    <JsonLD graph={pageSchema} />
+  </Fragment>
+
+  <h1 class='page-title'>Blog</h1>
+  <p class='page-intro'>{description}</p>
+
+  <ul class='post-list'>
+    {
+      posts.map((post) => (
+        <li>
+          <a href={`/blog/${post.id}`} class='post-card-link'>
+            <Image
+              src={post.data.image.src}
+              alt={post.data.image.alt}
+              class='post-image'
+              loading='lazy'
+            />
+            <div class='post-card-copy'>
+              <h2 class='post-card-title'>{post.data.title}</h2>
+              <p class='post-card-date'>
+                <time datetime={post.data.pubDate.toISOString()}>
+                  {post.data.pubDate.toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </time>
+              </p>
+              <div class='meta-row'>
+                {post.data.draft && (
+                  <span class='meta-badge meta-badge--draft'>Draft</span>
+                )}
+                {post.data.pinned && (
+                  <span class='meta-badge meta-badge--pinned'>Pinned</span>
+                )}
+              </div>
+              {post.data.description && (
+                <p class='post-card-description'>{post.data.description}</p>
+              )}
+            </div>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</PageLayout>
+
+<style>
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .post-card-link {
+    display: grid;
+    grid-template-columns: minmax(180px, 220px) 1fr;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    transition:
+      border-color 0.2s ease,
+      transform 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .post-card-link:hover,
+  .post-card-link:focus-visible {
+    border-color: rgba(47, 93, 80, 0.35);
+    background: #fff;
+    transform: translateY(-2px);
+    outline: none;
+  }
+
+  .post-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #fff;
+  }
+
+  .post-card-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .post-card-title {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+  }
+
+  .post-card-description {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .post-card-date {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.95rem;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .meta-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .meta-badge--draft {
+    color: var(--color-danger);
+  }
+
+  .meta-badge--pinned {
+    color: var(--color-highlight);
+  }
+
+  @media (max-width: 720px) {
+    .post-card-link {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

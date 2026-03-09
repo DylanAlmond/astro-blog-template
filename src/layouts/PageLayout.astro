@@ -1,0 +1,30 @@
+---
+import Header from '../components/Header.astro';
+import BaseLayout from './BaseLayout.astro';
+import { site } from '../config/site';
+
+interface Props {
+  title: string;
+  description: string;
+  class?: string | null;
+}
+
+const { title, description, class: className } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <Fragment slot='head'>
+    <meta property='og:type' content='website' />
+    <slot name='head' />
+  </Fragment>
+
+  <Header />
+
+  <main class={`page-main ${className ?? ''}`}>
+    <slot />
+  </main>
+
+  <footer class='site-footer'>
+    <small>&copy; {new Date().getFullYear()} {site.name}</small>
+  </footer>
+</BaseLayout>

@@ -1,0 +1,44 @@
+---
+import JsonLD from '../components/JsonLD.astro';
+import { WebSiteSchema } from '../config/schema';
+import { site } from '../config/site';
+import PageLayout from '../layouts/PageLayout.astro';
+
+// Page Meta
+const title = site.name;
+const description = site.description;
+const canonicalUrl = new URL(Astro.url.pathname, site.url);
+const pageSchema = WebSiteSchema(canonicalUrl.toString(), title, description);
+---
+
+<PageLayout
+  title={title}
+  description={description}
+  class='page-stack page-stack--center'
+>
+  <Fragment slot='head'>
+    <JsonLD graph={pageSchema} />
+  </Fragment>
+
+  <h1 class='page-title'>{site.name}</h1>
+  <p class='page-intro'>{site.description}</p>
+
+  <div class='button-row'>
+    <a href='/blog' class='button-link'>View Posts</a>
+    <a href='/contact' class='button-link button-link-outline'>Contact</a>
+  </div>
+</PageLayout>
+
+<style>
+  .page-stack--center {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+</style>

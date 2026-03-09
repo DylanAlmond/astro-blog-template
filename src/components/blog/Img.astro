@@ -1,0 +1,36 @@
+---
+import Image from 'astro/components/Image.astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  caption?: string;
+}
+
+const { src, alt, caption } = Astro.props;
+---
+
+<figure class='flex flex-col gap-2'>
+  <Image src={src} alt={alt} class={'content-image'} />
+
+  {caption && <figcaption class='content-caption'>{caption}</figcaption>}
+</figure>
+
+<style>
+  figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .content-image {
+    max-height: 800px;
+    background: #fff;
+    object-fit: contain;
+  }
+
+  .content-caption {
+    color: var(--color-muted, rgba(34, 28, 22, 0.72));
+    font-size: 0.95rem;
+  }
+</style>

@@ -1,0 +1,17 @@
+---
+import type { Graph, Person, Thing } from 'schema-dts';
+import { personSchema } from '../config/schema';
+
+type Props = {
+  graph: Thing;
+};
+
+const { graph } = Astro.props;
+
+const fullSchema: Graph = {
+  '@context': 'https://schema.org',
+  '@graph': [graph, personSchema as Person],
+};
+---
+
+<script type='application/ld+json' set:html={JSON.stringify(fullSchema)} />

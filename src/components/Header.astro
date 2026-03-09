@@ -1,0 +1,91 @@
+---
+import { site } from '../config/site';
+
+const routes = [
+  { name: 'Home', href: '/' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'About', href: '/about' },
+  { name: 'Contact', href: '/contact' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class='site-header'>
+  <div class='header-inner'>
+    <a href='/' class='site-title'>{site.name}</a>
+
+    <nav aria-label='Main navigation'>
+      <ul class='nav-list'>
+        {
+          routes.map((route) => (
+            <li>
+              <a
+                href={route.href}
+                class:list={[
+                  'nav-link',
+                  {
+                    active:
+                      currentPath === route.href ||
+                      (route.href !== '/' &&
+                        currentPath.startsWith(route.href)),
+                  },
+                ]}
+              >
+                {route.name}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--color-border);
+    background: rgba(247, 243, 234, 0.92);
+  }
+
+  .header-inner {
+    max-width: var(--site-width);
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .site-title {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .nav-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--color-primary);
+  }
+
+  .nav-link.active {
+    font-weight: 600;
+  }
+</style>

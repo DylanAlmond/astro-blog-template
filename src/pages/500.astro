@@ -1,0 +1,26 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+
+interface Props {
+  error: unknown;
+}
+
+const description =
+  'An unexpected error has occurred. Return home to continue exploring websites, apps, and digital projects.';
+
+const { error } = Astro.props;
+---
+
+<PageLayout
+  title='Error'
+  description={description}
+  class='page-stack error-page'
+>
+  <h1 class='page-title'>Oops!</h1>
+  <h2>An Error Has Occurred.</h2>
+  <p>
+    {error instanceof Error ? error.message : 'Unknown Error'}
+  </p>
+
+  <a href='/' class='button-link'>Go Home</a>
+</PageLayout>

@@ -1,0 +1,44 @@
+---
+import { ContactSchema } from '../config/schema';
+import { site } from '../config/site';
+import PageLayout from '../layouts/PageLayout.astro';
+import JsonLD from '../components/JsonLD.astro';
+
+// Page Meta
+const title = `Contact | ${site.name}`;
+const description =
+  'Get in touch for inquiries. Reach out via email or connect on social media.';
+const canonicalUrl = new URL(Astro.url.pathname, site.url);
+const pageSchema = ContactSchema(canonicalUrl.toString(), title, description);
+---
+
+<PageLayout title={title} description={description} class='page-stack'>
+  <Fragment slot='head'>
+    <JsonLD graph={pageSchema} />
+  </Fragment>
+
+  <h1 class='page-title'>Contact</h1>
+
+  <p class='page-intro'>
+    Use this page as your default contact page. Update the address, links, or
+    add a form when you're ready.
+  </p>
+
+  <address class='contact-list'>
+    <a href={`mailto:${site.email}`}>{site.email}</a>
+    <a href={`tel:${site.telephone}`}>{site.telephone}</a>
+  </address>
+</PageLayout>
+
+<style>
+  .contact-list {
+    font-style: normal;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .contact-list a {
+    width: fit-content;
+  }
+</style>

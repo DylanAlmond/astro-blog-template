@@ -1,0 +1,28 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import JsonLD from '../components/JsonLD.astro';
+import { site } from '../config/site';
+import { AboutSchema } from '../config/schema';
+
+// Page Meta
+const title = `About | ${site.name}`;
+const canonicalUrl = new URL(Astro.url.pathname, site.url);
+const pageSchema = AboutSchema(
+  canonicalUrl.toString(),
+  title,
+  site.description,
+);
+---
+
+<PageLayout title={title} description={site.description} class='page-stack'>
+  <Fragment slot='head'>
+    <JsonLD graph={pageSchema} />
+  </Fragment>
+
+  <h1 class='page-title'>About</h1>
+
+  <p class='page-intro'>
+    This is the about page. Edit <code>src/pages/about.astro</code> to add your own
+    content, background image, or personal story.
+  </p>
+</PageLayout>
