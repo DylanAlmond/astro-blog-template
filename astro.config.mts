@@ -9,7 +9,7 @@ import { site } from './src/config/site';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://example.com',
+  site: site.url,
   vite: {
     plugins: [],
   },

@@ -1,4 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
 import { site } from '../config/site';
 import type {
   AboutPage,
@@ -22,6 +23,17 @@ const imageFiles: Record<string, { default: ImageMetadata }> = import.meta.glob(
   },
 );
 
+/**
+ * Extracts Astro-managed image metadata from rendered post HTML and converts it into schema.org image nodes.
+ *
+ * @param htmlString Rendered HTML from a blog post entry.
+ * @returns A list of schema.org `ImageObject` values resolved to absolute WebP URLs.
+ * @throws {SyntaxError} Thrown if Astro image metadata cannot be parsed from the encoded payload.
+ *
+ * Side effects/runtime constraints: Parses HTML on the server, performs image asset
+ * processing with `getImage`, and logs a warning when an image path cannot be
+ * resolved from the eager image glob.
+ */
 async function decodeAstroImages(htmlString: string): Promise<ImageObject[]> {
   const images: ImageObject[] = [];
 
@@ -30,6 +42,7 @@ async function decodeAstroImages(htmlString: string): Promise<ImageObject[]> {
 
   visit(tree, 'element', (node: any) => {
     if (node.tagName === 'img' && node.properties?.__astro_image_) {
+      // Astro stores optimized image metadata in an encoded attribute rather than a plain src.
       const decoded = decode(node.properties.__astro_image_);
       const { src, alt }: { src: string; alt: string } = JSON.parse(decoded);
 
@@ -70,6 +83,19 @@ export const personSchema = {
   sameAs: Object.values(site.socials),
 };
 
+/**
+ * Builds the structured data payload for a single blog post.
+ *
+ * @param url Canonical absolute URL for the blog post page.
+ * @param post Blog collection entry used to populate metadata fields.
+ * @param lastModifiedISO ISO-8601 timestamp representing the most recent content update.
+ * @returns A `BlogPosting` schema object with merged markdown and featured image metadata.
+ * @throws {Error} Propagates image processing failures from Astro asset generation.
+ *
+ * Side effects/runtime constraints: Requires server-side access to rendered post HTML
+ * and image assets. Featured images are converted to WebP URLs before inclusion in
+ * the returned schema.
+ */
 export const BlogPostSchema = async (
   url: string,
   post: CollectionEntry<'blog'>,
@@ -82,7 +108,7 @@ export const BlogPostSchema = async (
   const datePublishedISO = post.data.pubDate.toISOString();
   const dateModifiedISO = new Date(lastModifiedISO).toISOString();
 
-  // Featured Image
+  // Keep the featured image alongside inline markdown images so rich results can use either source.
   if (post.data.image) {
     const processedImage = await getImage({
       src: post.data.image.src,
@@ -115,6 +141,19 @@ export const BlogPostSchema = async (
   };
 };
 
+/**
+ * Builds the blog-level schema and expands each collection entry into a `BlogPosting` node.
+ *
+ * @param url Canonical absolute URL for the blog index page.
+ * @param posts Blog collection entries that should appear in the structured data graph.
+ * @param title Human-readable blog title.
+ * @param description Summary used by the top-level `Blog` schema node.
+ * @returns A `Blog` schema object whose `blogPost` field contains resolved post schemas.
+ * @throws {Error} Propagates failures from Git metadata lookup or image processing during post schema generation.
+ *
+ * Side effects/runtime constraints: Reads Git or filesystem metadata for each post via
+ * `getModifiedTime` and performs asynchronous asset work for nested post images.
+ */
 export const BlogSchema = async (
   url: string,
   posts: CollectionEntry<'blog'>[],

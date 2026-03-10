@@ -1,6 +1,17 @@
 import { execSync } from 'child_process';
 import { statSync } from 'fs';
 
+/**
+ * Resolves the creation and last-modified timestamps for a content file.
+ *
+ * @param filepath File path passed to Git and filesystem lookups.
+ * @returns An object containing ISO-8601 timestamps for the latest modification and the original creation date.
+ * @throws {Error} Thrown when the file does not exist and the filesystem fallback cannot stat it.
+ *
+ * Side effects/runtime constraints: Executes synchronous Git commands, which can block
+ * the Node.js event loop during build time. Falls back to filesystem timestamps when Git
+ * metadata is unavailable, such as in shallow clones or uncommitted files.
+ */
 export default function getModifiedTime(filepath: string) {
   let lastModified = '';
   let dateCreated = '';
@@ -15,7 +26,7 @@ export default function getModifiedTime(filepath: string) {
     // Git not available or no commits yet
   }
 
-  // Use FS as backup
+  // Builds still need deterministic timestamps outside a Git checkout.
   if (!lastModified) {
     lastModified = statSync(filepath).mtime.toISOString();
   }
@@ -32,7 +43,7 @@ export default function getModifiedTime(filepath: string) {
     // Git not available or no commits yet
   }
 
-  // Use FS as backup
+  // ctime is the best local fallback when repository history cannot answer creation time.
   if (!dateCreated) {
     dateCreated = statSync(filepath).ctime.toISOString();
   }
