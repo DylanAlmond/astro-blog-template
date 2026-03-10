@@ -1,4 +1,5 @@
 ---
+import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
@@ -125,9 +126,7 @@ const pageSchema = await BlogPostSchema(
     </article>
   </main>
 
-  <footer class='site-footer'>
-    <small>&copy; {new Date().getFullYear()} {site.name}</small>
-  </footer>
+  <Footer />
 </BaseLayout>
 
 <style>

@@ -1,7 +1,7 @@
 ---
+import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import BaseLayout from './BaseLayout.astro';
-import { site } from '../config/site';
 
 interface Props {
   title: string;
@@ -24,7 +24,5 @@ const { title, description, class: className } = Astro.props;
     <slot />
   </main>
 
-  <footer class='site-footer'>
-    <small>&copy; {new Date().getFullYear()} {site.name}</small>
-  </footer>
+  <Footer />
 </BaseLayout>
