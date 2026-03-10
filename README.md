@@ -2,6 +2,8 @@
 
 A modern, fast blog template built with Astro.
 
+![Screenshot](screenshot.png)
+
 ## Overview
 
 - Static site built with Astro, focused on fast, accessible, and SEO-friendly delivery.
